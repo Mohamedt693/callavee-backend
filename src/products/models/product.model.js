@@ -103,7 +103,9 @@ storeSchema.virtual('discount').get(function() {
 storeSchema.set('toJSON', { virtuals: true });
 storeSchema.set('toObject', { virtuals: true });
 
-productSchema.index({ categories: 1, skinType: 1, budgetCategory: 1 });
+productSchema.index({ categories: 1 });
+productSchema.index({ skinType: 1 });
+productSchema.index({ budgetCategory: 1 });
 productSchema.index({ title: 'text', brandName: 'text' });
 
 export default mongoose.model('Product', productSchema);
