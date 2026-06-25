@@ -11,10 +11,11 @@ import { responseHandler } from './middlewares/responseHandler.js';
 import productRoutes from './products/routes/product.route.js';
 import authRoutes from './auth/routes/auth.routes.js';
 import analyticsRoutes from './analytics/routes/analytics.routes.js';
-import priceHistoryRoutes from './products/routes/priceHistory.routes.js';
+import priceHistoryRoutes from './price-history/routes/priceHistory.routes.js';
 import subscriberRoutes from './subsciptions/routes/subscription.routes.js';
 import consultationRoutes from './bot/routes/consultation.routes.js';
-import CategoryRoute from './categories/routes/category.route.js';
+import CategoryRoutes from './categories/routes/category.route.js';
+import IngredientsRoutes from './Ingredients/routes/Ingredients.route.js'
 import blogRoutes from './blog/routes/blog.routes.js';
 import scraperRoutes from './scraper/routes/scraper.routes.js'
 // cron jobs
@@ -35,13 +36,14 @@ app.use(detectCountry);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/interactions', analyticsRoutes);
+app.use('/api/categories', CategoryRoutes);
+app.use('/api/ingredients', IngredientsRoutes);
 app.use('/api/price-history', priceHistoryRoutes); 
 app.use('/api', consultationRoutes);
 app.use('/api/subscribe', subscriberRoutes);
 app.use('/api/blog', blogRoutes);
-app.use('/api/categories', CategoryRoute);
-app.use('/api/cron', scraperRoutes);
+app.use('/api/interactions', analyticsRoutes);
+app.use('/api/scraper', scraperRoutes);
 
 
 // MongoDB connection

@@ -190,7 +190,7 @@ export const updateBlog = async (req, res) => {
             };
         }
 
-        const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after', runValidators: true } );
         
         return res.success("Blog updated successfully", updatedBlog, 200);
     } catch (error) {

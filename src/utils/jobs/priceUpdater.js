@@ -1,5 +1,5 @@
 import Product from '../../products/models/product.model.js';
-import { PriceHistory } from '../../products/models/priceHistory.model.js';
+import { PriceHistory } from '../../price-history/models/priceHistory.model.js';
 import { Subscriber } from '../../subsciptions/models/subscription.model.js';
 import { fetchProductPrice } from '../../services/scraper.js';
 import { sendPriceDropNotification } from "../../services/email.service.js";

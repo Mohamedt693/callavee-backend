@@ -1,55 +1,31 @@
 import slugify from "slugify";
 import Product from '../models/product.model.js';
 import Category from '../../categories/models/Category.model.js';
+import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import PRODUCT_MESSAGES from "../../utils/messages/product.messages.js";
 
 // Add a new product
 export const addProduct = async (req, res) => {
   try {
     const {
-      title,
-      brandName,
-      categories,
-      skinType,
-      budgetCategory,
-      ingredients,
-      stores,
-      description,
-      features,
-      isFeatured,
-      images,
-      freeFrom,
-      rating,       
-      reviewsCount,
+      title, brandName, categories, skinType, budgetCategory, ingredients,
+      stores, review, features, isFeatured, images, freeFrom, rating, reviewsCount,
     } = req.body;
 
-    if (
-      !title 
-      || !brandName 
-      || !features 
-      || !categories 
-      || !skinType 
-      || !stores 
-      || stores.length === 0
-      || !rating
-      || ! reviewsCount
-    ) {
+    // Validate required fields including the new review object
+    if (!title || !brandName || !features || !categories || !skinType || !stores || 
+        stores.length === 0 || !review || !review.summary) {
       return res.error(PRODUCT_MESSAGES.ERROR.REQUIRED_FIELDS, 400);
     }
 
     const slug = slugify(title, { lower: true, strict: true, trim: true });
 
     const newProduct = new Product({
-      title,
-      brandName,
-      slug,
-      categories,
-      skinType,
-      budgetCategory,
+      title, brandName, slug, categories, skinType, budgetCategory,
       ingredients: ingredients || [],
-      stores,
-      description,
-      features,
+      stores, 
+      review, 
+      features, 
       isFeatured,
       images: images || [],
       freeFrom: freeFrom || { alcohol: false, fragrance: false, paraben: false },
@@ -58,7 +34,9 @@ export const addProduct = async (req, res) => {
     });
 
     const savedProduct = await newProduct.save();
-    const populatedProduct = await Product.findById(savedProduct._id).populate("categories");
+    const populatedProduct = await Product.findById(savedProduct._id)
+        .populate("categories")
+        .populate("ingredients");
 
     return res.success(PRODUCT_MESSAGES.SUCCESS.CREATED, populatedProduct, 201);
   } catch (error) {
@@ -70,7 +48,7 @@ export const addProduct = async (req, res) => {
 export const getProductBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const product = await Product.findOne({ slug }).populate("categories");
+    const product = await Product.findOne({ slug }).populate("categories").populate("ingredients");
 
     if (!product) return res.error(PRODUCT_MESSAGES.ERROR.NOT_FOUND, 404);
 
@@ -83,7 +61,7 @@ export const getProductBySlug = async (req, res) => {
 // Get product by ID
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate("categories");
+    const product = await Product.findById(req.params.id).populate("categories").populate("ingredients");
     if (!product) return res.error(PRODUCT_MESSAGES.ERROR.NOT_FOUND, 404);
     return res.success(PRODUCT_MESSAGES.SUCCESS.FETCHED_ONE, product, 200);
   } catch (error) {
@@ -98,7 +76,7 @@ export const getProductsByIds = async (req, res) => {
     if (!ids) return res.error(PRODUCT_MESSAGES.ERROR.INVALID_ID, 400);
 
     const idArray = ids.split(",");
-    const products = await Product.find({ _id: { $in: idArray } }).populate("categories");
+    const products = await Product.find({ _id: { $in: idArray } }).populate("categories").populate("ingredients");
 
     return res.success(PRODUCT_MESSAGES.SUCCESS.FETCHED_ALL, products, 200);
   } catch (error) {
@@ -106,14 +84,14 @@ export const getProductsByIds = async (req, res) => {
   }
 };
 
-// Get all products + pagination + search + filtering
+// Get all products with pagination, search, and filtering
 export const getAllProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const { category, skinType, budgetCategory, search, alcoholFree, fragranceFree, parabenFree } = req.query;
+    const { category, skinType, budgetCategory, search, alcoholFree, fragranceFree, parabenFree, ingredients } = req.query;
     let filterQuery = {};
 
     if (search) {
@@ -136,10 +114,14 @@ export const getAllProducts = async (req, res) => {
       }
     }
 
+    if (ingredients) {
+        const ingredientsArray = ingredients.split(',');
+        filterQuery.ingredients = { $in: ingredientsArray };
+    }
+
     if (skinType) filterQuery.skinType = { $in: [skinType] };
     if (budgetCategory) filterQuery.budgetCategory = budgetCategory;
     
-    // Free-from filtering
     if (alcoholFree === 'true') filterQuery['freeFrom.alcohol'] = true;
     if (fragranceFree === 'true') filterQuery['freeFrom.fragrance'] = true;
     if (parabenFree === 'true') filterQuery['freeFrom.paraben'] = true;
@@ -148,6 +130,7 @@ export const getAllProducts = async (req, res) => {
 
     const products = await Product.find(filterQuery)
       .populate("categories")
+      .populate("ingredients")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -171,6 +154,7 @@ export const getTopSellers = async (req, res) => {
   try {
     const topSellers = await Product.find({ "stores.isAvailable": true })
       .populate("categories")
+      .populate("ingredients")
       .sort({ "stores.boughtPastMonth": -1 })
       .limit(8);
 
@@ -185,6 +169,7 @@ export const getFeaturedProducts = async (req, res) => {
   try {
     const featuredProducts = await Product.find({ isFeatured: true })
       .populate("categories")
+      .populate("ingredients")
       .sort({ rating: -1 })
       .limit(8);
 
@@ -194,7 +179,7 @@ export const getFeaturedProducts = async (req, res) => {
   }
 };
 
-// Get related products
+// Get related products based on categories, skin type, and common ingredients
 export const getRelatedProducts = async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,10 +191,12 @@ export const getRelatedProducts = async (req, res) => {
       _id: { $ne: product._id },
       categories: { $in: product.categories },
       skinType: { $in: product.skinType },
+      ingredients: { $in: product.ingredients },
       "stores.isAvailable": true,
     })
       .populate("categories")
-      .limit(8)
+      .populate("ingredients")
+      .limit(12)
       .sort({ rating: -1 });
 
     return res.success(PRODUCT_MESSAGES.SUCCESS.FETCHED_ALL, related, 200);
@@ -235,7 +222,9 @@ export const updateProduct = async (req, res) => {
       req.params.id,
       updateData,
       { returnDocument: 'after', runValidators: true } 
-    ).populate("categories");
+    )
+    .populate("categories")
+    .populate("ingredients");
 
     if (!updatedProduct)
       return res.error(PRODUCT_MESSAGES.ERROR.NOT_FOUND, 404);

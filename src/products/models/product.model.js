@@ -19,10 +19,11 @@ const freeFromSchema = new mongoose.Schema({
     paraben: { type: Boolean, default: false }
 }, { _id: false });
 
-
-const ingredientSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    info: { type: String }
+const reviewContentSchema = new mongoose.Schema({
+    summary: { type: String, required: true },
+    pros: { type: [String], default: [] },
+    cons: { type: [String], default: [] },
+    editorVerdict: { type: String }
 }, { _id: false });
 
 
@@ -62,9 +63,12 @@ const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     brandName: { type: String, required: true, trim: true },
-    description: { type: String },
+    review: { type: reviewContentSchema, required: true },
     features: [String],
-    ingredients: [ingredientSchema], 
+    ingredients: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Ingredient'
+    }],
     skinType: { type: [String], enum: VALID_SKIN_TYPES, required: true },
     budgetCategory: { type: String, enum: BUDGET_CATEGORY },
     images: [String],
@@ -72,8 +76,7 @@ const productSchema = new mongoose.Schema({
         { 
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'Category',
-            required: true,
-            index: true
+            required: true
         }
     ],
     
@@ -103,6 +106,7 @@ storeSchema.virtual('discount').get(function() {
 storeSchema.set('toJSON', { virtuals: true });
 storeSchema.set('toObject', { virtuals: true });
 
+productSchema.index({ ingredients: 1 });
 productSchema.index({ categories: 1 });
 productSchema.index({ skinType: 1 });
 productSchema.index({ budgetCategory: 1 });

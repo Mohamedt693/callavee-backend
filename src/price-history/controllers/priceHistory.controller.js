@@ -1,5 +1,5 @@
-import { PriceHistory } from "../models/priceHistory.model.js";
-import Product from "../models/product.model.js";
+import { PriceHistory } from '../models/priceHistory.model.js';
+import Product from '../../products/models/product.model.js';
 
 export const getPriceHistory = async (req, res) => {
   try {
