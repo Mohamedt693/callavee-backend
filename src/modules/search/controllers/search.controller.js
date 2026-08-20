@@ -1,6 +1,6 @@
 import Product from '../../products/models/product.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
-import SearchQuery from '../models/searchQuery.model.js';
+import SearchQuery from '../models/SearchQuery.model.js';
 
 export const globalSearch = async (req, res) => {
     try {
