@@ -7,3 +7,6 @@ export const generateToken = (payload) => {
         { expiresIn: '7d' }
     );
 };
+
+
+

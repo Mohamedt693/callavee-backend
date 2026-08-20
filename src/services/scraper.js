@@ -5,29 +5,17 @@ dotenv.config();
 const API_KEY = process.env.BRIGHT_DATA_API_KEY;
 
 export const fetchProductPrice = async (storeName, identifier) => {
-    let url;
-    let datasetId;
+    if (storeName !== 'amazon') {
+        console.warn(`Store ${storeName} is not supported.`);
+        return null;
+    }
 
-    // Map stores to their respective logic
-    switch (storeName) {
-        case 'amazon':
-            url = `https://www.amazon.com/dp/${identifier}`;
-            datasetId = process.env.AMAZON_DS_ID;
-            break;
-        case 'sephora':
-            url = `https://www.sephora.com/product/${identifier}`;
-            datasetId = process.env.SEPHORA_DS_ID;
-            break;
-        case 'ulta':
-            url = `https://www.ulta.com/p/${identifier}`;
-            datasetId = process.env.ULTA_DS_ID;
-            break;
-        case 'target':
-            url = `https://www.target.com/p/${identifier}`;
-            datasetId = process.env.TARGET_DS_ID;
-            break;
-        default:
-            return null;
+    const url = `https://www.amazon.com/dp/${identifier}`;
+    const datasetId = process.env.DATASET_ID;
+
+    if (!datasetId) {
+        console.error("DATASET_ID is missing in .env file!");
+        return null;
     }
 
     try {
@@ -41,7 +29,7 @@ export const fetchProductPrice = async (storeName, identifier) => {
         );
         return Array.isArray(response.data) ? response.data[0] : response.data;
     } catch (error) {
-        console.error(`Error scraping ${storeName} for ${identifier}:`, error.message);
+        console.error(`Error scraping Amazon for ${identifier}:`, error.message);
         return null;
     }
 };
