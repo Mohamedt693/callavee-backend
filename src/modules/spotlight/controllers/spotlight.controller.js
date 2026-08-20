@@ -1,4 +1,4 @@
-import Spotlight from '../models/Spotlight.model.js';
+import Spotlight from '../models/spotlight.model.js';
 import Product from '../../products/models/product.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import Brand from '../../brands/models/brand.model.js';
