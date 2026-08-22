@@ -84,13 +84,15 @@ app.use('/api/quick-tips', quickTipRoutes);
 
 
 
-// MongoDB connection
-connectDB().then(() => {
-    initScraper(); 
-    console.log("Scraper initialized");
-});
-
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`CallaVee Backend running on port ${PORT}`);
+    console.log(`CallaVee Backend running on port 5000`);
+    
+    connectDB().then(() => {
+        initScraper(); 
+        console.log("Scraper initialized");
+    }).catch(err => {
+        console.log("DB Connection Error:", err);
+    });
 });
