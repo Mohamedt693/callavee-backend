@@ -36,14 +36,6 @@ import quickTipRoutes from './modules/quick-tips/routes/quickTip.route.js';
 // cron jobs
 import { initScraper } from './modules/scraper/controllers/scraper.controller.js';
 
-const allowedOrigins = [
-    'https://callavee.com',
-    'https://www.callavee.com',
-    'https://admin.callavee.com',
-    'http://localhost:3000',
-    'http://localhost:5173'
-];
-
 
 const app = express();
 
@@ -53,15 +45,10 @@ app.use(cookieParser());
 app.set('trust proxy', 1); 
 app.use(helmet());
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: [
+        process.env.FRONTEND_URL,
+        process.env.DASHBOARD_URL
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
