@@ -5,6 +5,8 @@ import { CONSULTATION_MESSAGES } from '../../../utils/messages/consultation.mess
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+console.log("GROQ API Key:", process.env.GROQ_API_KEY); // Debugging line to check if the API key is loaded
+
 export const handleConsultation = async (req, res) => {
   try {
     const { message, chatHistory } = req.body;
@@ -135,7 +137,7 @@ export const handleConsultation = async (req, res) => {
 
     const completion = await groq.chat.completions.create({
       messages: messages,
-      model: "llama-3.1-70b-versatile",
+      model: "qwen/qwen3.8-27b",
       temperature: 0.1, 
     });
 
