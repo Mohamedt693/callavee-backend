@@ -30,15 +30,13 @@ import userRoutes from './modules/users/routes/user.route.js';
 import contactRoutes from './modules/contact/routes/contact.routes.js';
 import storesRoutes from './modules/stores/routes/store.route.js';
 import guidelineRoutes from './modules/Guideline/routes/guideline.routes.js';
-import skinTypeRoutes from './modules/Skin-types/routes/skinType.route.js';
+import targetTypeRoutes from './modules/target-types/routes/targetType.route.js';
 import quickTipRoutes from './modules/quick-tips/routes/quickTip.route.js';
 
 // cron jobs
 import { initScraper } from './modules/scraper/controllers/scraper.controller.js';
 
-
 const app = express();
-
 
 // Middleware
 app.use(cookieParser());
@@ -79,15 +77,13 @@ app.use('/api/routines', routineRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/guidelines', guidelineRoutes);
-app.use('/api/skin-types', skinTypeRoutes);
+app.use('/api/target-types', targetTypeRoutes);
 app.use('/api/quick-tips', quickTipRoutes);
-
-
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`CallaVee Backend running on port 5000`);
+    console.log(`CallaVee Backend running on port ${PORT}`);
     
     connectDB().then(() => {
         initScraper(); 

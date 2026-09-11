@@ -7,7 +7,7 @@ const ingredientSchema = new mongoose.Schema({
     highlights: [{ type: String }],
     protocols: [{ 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'SkinProtocol' 
+        ref: 'Protocol' 
     }],
     safetyRating: { type: String, enum: ['high', 'medium', 'low', 'unknown'] },
     isFeatured: { type: Boolean, default: false },

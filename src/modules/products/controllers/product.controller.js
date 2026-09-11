@@ -3,15 +3,15 @@ import Product from '../models/product.model.js';
 import Category from '../../categories/models/Category.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import Brand from '../../brands/models/brand.model.js';
-import SkinProtocol from '../../protocols/models/protocol.model.js';
-import SkinType from '../../Skin-types/models/skinType.model.js';
+import Protocol from '../../protocols/models/protocol.model.js';
+import TargetType from '../../target-types/models/targetType.model.js';
 import PRODUCT_MESSAGES from "../../../utils/messages/product.messages.js";
 
 export const addProduct = async (req, res) => {
   try {
-    const { title, brand, review, features, ingredients, skinType, budgetCategory, images, categories, protocols, safetyAndCompatibility, howToUse, freeFrom, rating, reviewsCount, isFeatured } = req.body;
+    const { title, brand, review, features, ingredients, targetTypes, budgetCategory, images, categories, protocols, safetyAndCompatibility, howToUse, freeFrom, rating, reviewsCount, isFeatured } = req.body;
     
-    if (!title || !brand || !review || !features || !categories || !ingredients || !skinType || !budgetCategory || !rating || !reviewsCount) {
+    if (!title || !brand || !review || !features || !categories || !ingredients || !targetTypes || !budgetCategory || !rating || !reviewsCount) {
       return res.error(PRODUCT_MESSAGES.ERROR.REQUIRED_FIELDS, 400);
     }
 
@@ -21,9 +21,9 @@ export const addProduct = async (req, res) => {
     const dbCategories = await Category.find({ slug: { $in: categories } }).distinct('_id');
     const dbIngredients = await Ingredient.find({ slug: { $in: ingredients } });
     const ingredientIds = dbIngredients.map(i => i._id);
-    const dbProtocols = protocols ? await SkinProtocol.find({ slug: { $in: protocols } }).distinct('_id') : [];
+    const dbProtocols = protocols ? await Protocol.find({ slug: { $in: protocols } }).distinct('_id') : [];
     
-    const dbSkinTypes = skinType ? await SkinType.find({ slug: { $in: skinType } }).distinct('_id') : [];
+    const dbTargetTypes = targetTypes ? await TargetType.find({ slug: { $in: targetTypes } }).distinct('_id') : [];
 
     const slug = slugify(title, { lower: true, strict: true, trim: true });
     
@@ -39,7 +39,7 @@ export const addProduct = async (req, res) => {
       review, features, 
       ingredients: ingredientIds, 
       protocols: dbProtocols,
-      skinType: dbSkinTypes, 
+      targetTypes: dbTargetTypes, 
       budgetCategory,
       images: images || [],
       categories: dbCategories,
@@ -53,7 +53,7 @@ export const addProduct = async (req, res) => {
     });
 
     const savedProduct = await newProduct.save();
-    const populatedProduct = await Product.findById(savedProduct._id).populate("brand categories ingredients protocols skinType"); // <-- إضافة skinType للـ populate
+    const populatedProduct = await Product.findById(savedProduct._id).populate("brand categories ingredients protocols targetTypes");
     return res.success(PRODUCT_MESSAGES.SUCCESS.CREATED, populatedProduct, 201);
   } catch (error) {
     return res.error(PRODUCT_MESSAGES.ERROR.SERVER_ERROR, 500, error);
@@ -78,11 +78,11 @@ export const updateProduct = async (req, res) => {
     }
 
     if (updateData.protocols) {
-      updateData.protocols = await SkinProtocol.find({ slug: { $in: updateData.protocols } }).distinct('_id');
+      updateData.protocols = await Protocol.find({ slug: { $in: updateData.protocols } }).distinct('_id');
     }
 
-    if (updateData.skinType) {
-      updateData.skinType = await SkinType.find({ slug: { $in: updateData.skinType } }).distinct('_id');
+    if (updateData.targetTypes) {
+      updateData.targetTypes = await TargetType.find({ slug: { $in: updateData.targetTypes } }).distinct('_id');
     }
 
     if (updateData.ingredients) {
@@ -96,7 +96,7 @@ export const updateProduct = async (req, res) => {
       };
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).populate("brand categories ingredients offers protocols skinType"); // <-- إضافة skinType للـ populate
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).populate("brand categories ingredients offers protocols targetTypes");
     if (!updatedProduct) return res.error(PRODUCT_MESSAGES.ERROR.NOT_FOUND, 404);
     return res.success(PRODUCT_MESSAGES.SUCCESS.UPDATED, updatedProduct, 200);
   } catch (error) {

@@ -2,7 +2,7 @@ import Analytics from '../models/analytics.model.js';
 import Product from '../../products/models/product.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import Brand from '../../brands/models/brand.model.js';
-import SkinType from '../../Skin-types/models/skinType.model.js';
+import TargetType from '../../target-types/models/targetType.model.js';
 import Protocol from '../../protocols/models/protocol.model.js'; 
 import { ANALYTICS_MESSAGES } from '../../../utils/messages/analytics.messages.js';
 
@@ -29,13 +29,12 @@ export const recordInteraction = async (req, res) => {
     }
 };
 
-// Last 30 days analytics + System Counters (Products, Ingredients, Brands, Skin Types, Protocols)
+// Last 30 days analytics + System Counters (Products, Ingredients, Brands, Target Types, Protocols)
 export const getGeneralStats = async (req, res) => {
     try {
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         
-        // Run analytics aggregation and database collection counts in parallel for optimal performance
-        const [stats, productsCount, ingredientsCount, brandsCount, skinTypesCount, protocolsCount] = await Promise.all([
+        const [stats, productsCount, ingredientsCount, brandsCount, targetTypesCount, protocolsCount] = await Promise.all([
             Analytics.aggregate([
                 { $match: { createdAt: { $gte: thirtyDaysAgo } } },
                 { $group: { _id: "$type", count: { $sum: 1 } } },
@@ -44,18 +43,17 @@ export const getGeneralStats = async (req, res) => {
             Product.estimatedDocumentCount().catch(() => 0),
             Ingredient.estimatedDocumentCount().catch(() => 0),
             Brand.estimatedDocumentCount().catch(() => 0),
-            SkinType.estimatedDocumentCount().catch(() => 0),
+            TargetType.estimatedDocumentCount().catch(() => 0),
             Protocol.estimatedDocumentCount().catch(() => 0)
         ]);
 
-        // Format stats into a flexible format or attach system counters
         const responseData = {
             analytics: stats,
             counters: [
                 { _id: 'products', count: productsCount },
                 { _id: 'ingredients', count: ingredientsCount },
                 { _id: 'brands', count: brandsCount },
-                { _id: 'skin_types', count: skinTypesCount },
+                { _id: 'target_types', count: targetTypesCount },
                 { _id: 'protocols', count: protocolsCount }
             ]
         };
@@ -75,13 +73,11 @@ export const getAllProductsConversion = async (req, res) => {
         const skip = (page - 1) * limit;
         const searchQuery = req.query.search || "";
 
-        // 1. Build Search Stage for Products
         const productMatchStage = searchQuery
             ? { title: { $regex: searchQuery, $options: "i" } }
             : {};
 
         const pipeline = [
-            // Lookup analytics for each product to calculate views and clicks
             {
                 $lookup: {
                     from: "analytics",
@@ -101,9 +97,7 @@ export const getAllProductsConversion = async (req, res) => {
                     as: "productAnalytics"
                 }
             },
-            // Filter by search query on product title if provided
             ...(searchQuery ? [{ $match: productMatchStage }] : []),
-            // Calculate views, clicks, and conversion rate
             {
                 $project: {
                     _id: 1,
@@ -129,7 +123,6 @@ export const getAllProductsConversion = async (req, res) => {
                     }
                 }
             },
-            // Calculate Conversion Rate percentage
             {
                 $addFields: {
                     conversionRate: {
@@ -141,9 +134,7 @@ export const getAllProductsConversion = async (req, res) => {
                     }
                 }
             },
-            // Sort by conversion rate or clicks descending
             { $sort: { conversionRate: -1, clicks: -1, views: -1 } },
-            // Facet for pagination data and items
             {
                 $facet: {
                     metadata: [{ $count: "total" }],

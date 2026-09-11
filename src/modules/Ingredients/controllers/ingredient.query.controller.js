@@ -45,7 +45,7 @@ export const getAllIngredients = async (req, res) => {
           highlights: 1,
           isFeatured: 1, 
           safetyRating: 1,
-          usageLevel: 1,          
+          usageLevel: 1,         
           source: 1,            
           irritationPotential: 1,
           createdAt: 1, 
@@ -119,4 +119,3 @@ export const getIngredientById = async (req, res) => {
     return res.error(INGREDIENT_MESSAGES.ERROR.SERVER_ERROR, 500, error);
   }
 };
-

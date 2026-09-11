@@ -1,10 +1,9 @@
 import Product from '../models/product.model.js';
-import Offer from '../../Offers/models/offer.model.js';
 import Category from '../../categories/models/Category.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import Brand from '../../brands/models/brand.model.js';
-import SkinProtocol from '../../protocols/models/protocol.model.js';
-import SkinType from '../../Skin-types/models/skinType.model.js'; 
+import Protocol from '../../protocols/models/protocol.model.js';
+import TargetType from '../../target-types/models/targetType.model.js'; 
 import PRODUCT_MESSAGES from "../../../utils/messages/product.messages.js";
 
 export const getAllProducts = async (req, res) => {
@@ -14,15 +13,15 @@ export const getAllProducts = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const { 
-            categories, skinType, brand, ingredients, protocols,
+            categories, targetTypes, brand, ingredients, protocols, 
             budgetCategory, search, freeFrom, compatibility, isFeatured 
         } = req.query;
 
-        const [foundBrand, foundIngredients, foundProtocols, foundSkinTypes] = await Promise.all([
+        const [foundBrand, foundIngredients, foundProtocols, foundTargetTypes] = await Promise.all([
             brand ? Brand.findOne({ slug: brand }) : Promise.resolve(null),
             ingredients ? Ingredient.find({ slug: { $in: ingredients.split(',') } }).select('_id') : Promise.resolve(null),
-            protocols ? SkinProtocol.find({ slug: { $in: protocols.split(',') } }).select('_id') : Promise.resolve(null),
-            skinType ? SkinType.find({ slug: { $in: skinType.split(',') } }).select('_id') : Promise.resolve(null)
+            protocols ? Protocol.find({ slug: { $in: protocols.split(',') } }).select('_id') : Promise.resolve(null),
+            targetTypes ? TargetType.find({ slug: { $in: targetTypes.split(',') } }).select('_id') : Promise.resolve(null)
         ]);
 
         let allCategoryIds = null;
@@ -62,9 +61,9 @@ export const getAllProducts = async (req, res) => {
             matchQuery.protocols = protocolIds.length > 0 ? { $in: protocolIds } : { $in: [] };
         }
 
-        if (skinType) {
-            const skinTypeIds = foundSkinTypes ? foundSkinTypes.map(st => st._id) : [];
-            matchQuery.skinType = skinTypeIds.length > 0 ? { $in: skinTypeIds } : { $in: [] };
+        if (targetTypes) {
+            const targetTypeIds = foundTargetTypes ? foundTargetTypes.map(tt => tt._id) : [];
+            matchQuery.targetTypes = targetTypeIds.length > 0 ? { $in: targetTypeIds } : { $in: [] };
         }
 
         if (compatibility) {
@@ -98,7 +97,8 @@ export const getAllProducts = async (req, res) => {
             { $lookup: { from: 'ingredients', localField: 'ingredients', foreignField: '_id', as: 'ingredients' } },
             { $lookup: { from: 'brands', localField: 'brand', foreignField: '_id', as: 'brand' } },
             { $unwind: { path: '$brand', preserveNullAndEmptyArrays: true } },
-            { $lookup: { from: 'skintypes', localField: 'skinType', foreignField: '_id', as: 'skinType' } }, 
+            { $lookup: { from: 'targettypes', localField: 'targetTypes', foreignField: '_id', as: 'targetTypes' } },
+            { $lookup: { from: 'protocols', localField: 'protocols', foreignField: '_id', as: 'protocols' } },
             { $lookup: { from: 'offers', localField: '_id', foreignField: 'product', as: 'offers' } },
             { $unwind: { path: '$offers', preserveNullAndEmptyArrays: true } },
             { 
@@ -154,7 +154,7 @@ export const getProductBySlug = async (req, res) => {
         const { slug } = req.params;
         
         const product = await Product.findOne({ slug })
-        .populate("brand categories skinType protocols") 
+        .populate("brand categories targetTypes protocols") 
         .populate({
             path: "ingredients",
             options: { sort: { isFeatured: -1 } } 
@@ -178,7 +178,7 @@ export const getProductBySlug = async (req, res) => {
                 { ingredients: { $in: product.ingredients } }
             ]
         })
-        .populate("brand categories skinType protocols") 
+        .populate("brand categories targetTypes protocols") 
         .populate({
             path: "ingredients",
             options: { sort: { isFeatured: -1 } }
@@ -207,7 +207,7 @@ export const getProductBySlug = async (req, res) => {
 export const getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
-            .populate("brand categories ingredients protocols skinType") 
+            .populate("brand categories ingredients protocols targetTypes")
             .populate({
                 path: "offers",
                 populate: {
@@ -228,7 +228,7 @@ export const getProductsByIds = async (req, res) => {
         const { ids } = req.query;
         if (!ids) return res.error(PRODUCT_MESSAGES.ERROR.INVALID_ID, 400);
         const idArray = ids.split(",");
-        const products = await Product.find({ _id: { $in: idArray } }).populate("brand categories ingredients offers protocols skinType"); // <-- إضافة skinType هنا
+        const products = await Product.find({ _id: { $in: idArray } }).populate("brand categories ingredients offers protocols targetTypes");
         return res.success(PRODUCT_MESSAGES.SUCCESS.FETCHED_ALL, products, 200);
     } catch (error) {
         return res.error(PRODUCT_MESSAGES.ERROR.SERVER_ERROR, 500, error);
@@ -237,7 +237,7 @@ export const getProductsByIds = async (req, res) => {
 
 export const getTopSellers = async (req, res) => {
     try {
-        const topSellers = await Product.find().populate("brand categories ingredients offers protocols skinType").limit(8); // <-- إضافة skinType هنا
+        const topSellers = await Product.find().populate("brand categories ingredients offers protocols targetTypes").limit(8);
         return res.success(PRODUCT_MESSAGES.SUCCESS.FETCHED_ALL, { topSellers }, 200);
     } catch (error) {
         return res.error(PRODUCT_MESSAGES.ERROR.SERVER_ERROR, 500, error);
@@ -247,7 +247,7 @@ export const getTopSellers = async (req, res) => {
 export const getFeaturedProducts = async (req, res) => {
     try {
         const featuredProducts = await Product.find({ isFeatured: true })
-            .populate("brand categories ingredients protocols skinType") 
+            .populate("brand categories ingredients protocols targetTypes") 
             .populate({
                 path: "offers",
                 populate: {

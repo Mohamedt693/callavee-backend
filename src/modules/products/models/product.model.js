@@ -64,17 +64,17 @@ const productSchema = new mongoose.Schema(
     protocols: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "SkinProtocol",
+        ref: "Protocol",
       },
     ],
     review: { type: reviewContentSchema, required: true },
     features: [String],
     ingredients: [{ type: mongoose.Schema.Types.ObjectId, ref: "Ingredient" }],
     
-    skinType: [
+    targetTypes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "SkinType",
+        ref: "TargetType",
         required: true,
       },
     ],
@@ -123,13 +123,16 @@ productSchema.virtual("offers", {
 
 productSchema.pre("findOneAndDelete", async function (next) {
   const doc = await this.model.findOne(this.getQuery());
-  await Offer.deleteMany({ product: doc._id });
+  if (doc) {
+    await Offer.deleteMany({ product: doc._id });
+  }
+  next();
 });
 
 productSchema.index({ title: 'text' });
 productSchema.index({ ingredients: 1 });
 productSchema.index({ categories: 1 });
-productSchema.index({ skinType: 1 });
+productSchema.index({ targetTypes: 1 });
 productSchema.index({ budgetCategory: 1 });
 productSchema.index({ "compatibility.isPregnancySafe": 1 });
 productSchema.index({ "compatibility.isFungalAcneSafe": 1 });

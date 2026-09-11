@@ -1,4 +1,4 @@
-import SkinProtocol from '../models/protocol.model.js';
+import Protocol from '../models/protocol.model.js';
 
 export const getProtocolFilters = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ export const getProtocolFilters = async (req, res) => {
             ? { title: { $regex: search, $options: 'i' } } 
             : {};
 
-        const filters = await SkinProtocol.find(query, 'title slug')
+        const filters = await Protocol.find(query, 'title slug')
             .limit(10)
             .sort({ title: 1 });
 

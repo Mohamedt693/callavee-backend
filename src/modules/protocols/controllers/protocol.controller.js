@@ -1,6 +1,6 @@
 import slugify from "slugify";
-import SkinProtocol from '../models/protocol.model.js';
-import SkinType from '../../Skin-types/models/skinType.model.js'; 
+import Protocol from '../models/protocol.model.js';
+import TargetType from '../../target-types/models/targetType.model.js'; 
 import { PROTOCOL_MESSAGES } from '../../../utils/messages/protocol.messages.js';
 import cache from "../../../utils/functions/cache.js"; 
 
@@ -10,17 +10,17 @@ const invalidateFilterCache = () => {
 
 export const createProtocol = async (req, res) => {
     try {
-        const { title, description, highlights, routine, duration, targetSkinType, targetConcerns, logo, isFeatured } = req.body;
+        const { title, description, highlights, routine, duration, targetTypes, targetConcerns, logo, isFeatured } = req.body;
         
-        const dbSkinTypes = targetSkinType ? await SkinType.find({ slug: { $in: targetSkinType } }).distinct('_id') : [];
+        const dbTargetTypes = targetTypes ? await TargetType.find({ slug: { $in: targetTypes } }).distinct('_id') : [];
 
-        const protocol = await SkinProtocol.create({ 
+        const protocol = await Protocol.create({ 
             title, 
             description, 
             highlights, 
             routine, 
             duration, 
-            targetSkinType: dbSkinTypes, 
+            targetTypes: dbTargetTypes, 
             targetConcerns, 
             logo, 
             isFeatured,
@@ -43,11 +43,11 @@ export const updateProtocol = async (req, res) => {
             updateData.slug = slugify(updateData.title, { lower: true, strict: true });
         }
 
-        if (updateData.targetSkinType) {
-            updateData.targetSkinType = await SkinType.find({ slug: { $in: updateData.targetSkinType } }).distinct('_id');
+        if (updateData.targetTypes) {
+            updateData.targetTypes = await TargetType.find({ slug: { $in: updateData.targetTypes } }).distinct('_id');
         }
 
-        const protocol = await SkinProtocol.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate("targetSkinType");
+        const protocol = await Protocol.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate("targetTypes");
         if (!protocol) return res.status(404).json({ success: false, message: PROTOCOL_MESSAGES.ERROR.NOT_FOUND });
         
         invalidateFilterCache();
@@ -59,7 +59,7 @@ export const updateProtocol = async (req, res) => {
 
 export const deleteProtocol = async (req, res) => {
     try {
-        const protocol = await SkinProtocol.findByIdAndDelete(req.params.id);
+        const protocol = await Protocol.findByIdAndDelete(req.params.id);
         if (!protocol) return res.status(404).json({ success: false, message: PROTOCOL_MESSAGES.ERROR.NOT_FOUND });
         
         invalidateFilterCache();

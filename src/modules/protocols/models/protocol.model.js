@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const skinProtocolSchema = new mongoose.Schema({
+const protocolSchema = new mongoose.Schema({
   title: { 
     type: String, 
     required: true 
@@ -31,9 +31,9 @@ const skinProtocolSchema = new mongoose.Schema({
   },
   
   duration: String,
-  targetSkinType: [{
+  targetTypes: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'SkinType',
+    ref: 'TargetType',
     required: true
   }],
   targetConcerns: [String],
@@ -45,6 +45,6 @@ const skinProtocolSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-const SkinProtocol = mongoose.model('SkinProtocol', skinProtocolSchema);
+const Protocol = mongoose.model('Protocol', protocolSchema);
 
-export default SkinProtocol;
+export default Protocol;
