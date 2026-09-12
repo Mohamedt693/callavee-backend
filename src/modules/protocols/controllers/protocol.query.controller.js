@@ -4,6 +4,7 @@ import Product from '../../products/models/product.model.js';
 import Ingredient from '../../Ingredients/models/Ingredients.model.js';
 import { PROTOCOL_MESSAGES } from '../../../utils/messages/protocol.messages.js';
 
+
 export const getProtocols = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -41,7 +42,7 @@ export const getProtocols = async (req, res) => {
                 logo: 1, 
                 highlights: 1,
                 routine: 1, 
-                targetTypes: { _id: 1, name: 1, slug: 1 },
+                targetTypes: { _id: 1, type: 1, name: 1, slug: 1 },
                 targetConcerns: 1,
                 duration: 1,
                 isFeatured: 1,      
@@ -68,7 +69,7 @@ export const getProtocols = async (req, res) => {
 
 export const getProtocolById = async (req, res) => {
     try {
-        const protocol = await Protocol.findById(req.params.id).populate('targetTypes', 'name slug');
+        const protocol = await Protocol.findById(req.params.id).populate('targetTypes', 'type name slug')
         if (!protocol) return res.status(404).json({ success: false, message: PROTOCOL_MESSAGES.ERROR.NOT_FOUND });
         res.status(200).json({ success: true, data: protocol });
     } catch (error) {
@@ -80,7 +81,7 @@ export const getProtocolBySlug = async (req, res) => {
     try {
         const { slug } = req.params;
 
-        const protocol = await Protocol.findOne({ slug }).populate('targetTypes', 'name slug');
+        const protocol = await Protocol.findOne({ slug }).populate('targetTypes', 'type name slug')
         if (!protocol) return res.status(404).json({ success: false, message: PROTOCOL_MESSAGES.ERROR.NOT_FOUND });
 
         const products = await Product.find({ protocols: protocol._id })
@@ -110,7 +111,7 @@ export const getFeaturedProtocols = async (req, res) => {
     try {
         const featured = await Protocol.find({ isFeatured: true })
             .select('title slug description logo targetTypes isFeatured')
-            .populate('targetTypes', 'name slug')
+            .populate('targetTypes', 'type name slug')
             .sort({ updatedAt: -1 });
 
         res.status(200).json({ success: true, data: featured });

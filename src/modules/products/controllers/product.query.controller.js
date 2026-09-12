@@ -90,7 +90,7 @@ export const getAllProducts = async (req, res) => {
         const totalProducts = countResult.length > 0 ? countResult[0].total : 0;
     
         pipeline.push(
-            { $sort: { createdAt: -1 } },
+            { $sort: { isFeatured: -1, createdAt: -1 } },
             { $skip: skip },
             { $limit: limit },
             { $lookup: { from: 'categories', localField: 'categories', foreignField: '_id', as: 'categories' } },
