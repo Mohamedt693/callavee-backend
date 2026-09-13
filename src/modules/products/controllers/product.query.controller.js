@@ -91,8 +91,6 @@ export const getAllProducts = async (req, res) => {
     
         pipeline.push(
             { $sort: { isFeatured: -1, createdAt: -1 } },
-            { $skip: skip },
-            { $limit: limit },
             { $lookup: { from: 'categories', localField: 'categories', foreignField: '_id', as: 'categories' } },
             { $lookup: { from: 'ingredients', localField: 'ingredients', foreignField: '_id', as: 'ingredients' } },
             { $lookup: { from: 'brands', localField: 'brand', foreignField: '_id', as: 'brand' } },
@@ -136,7 +134,10 @@ export const getAllProducts = async (req, res) => {
                         $mergeObjects: ['$doc', { offers: '$offers' }]
                     }
                 }
-            }
+            },
+            { $sort: { isFeatured: -1, createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit },
         );
 
         const products = await Product.aggregate(pipeline);
